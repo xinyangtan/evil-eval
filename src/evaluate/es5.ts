@@ -431,9 +431,18 @@ const LogicalExpressionOperatorEvaluateMap = {
     '&&': (a: any, b: any) => a && b
 };
 export function LogicalExpression(env: Environment<ESTree.LogicalExpression>) {
-    const a = env.evaluate(env.node.left);
-    const b = env.evaluate(env.node.right);
-    return LogicalExpressionOperatorEvaluateMap[env.node.operator](a, b);
+    // const a = env.evaluate(env.node.left);
+    // const b = env.evaluate(env.node.right);
+    // return LogicalExpressionOperatorEvaluateMap[env.node.operator](a, b);
+    // logical Short-circuit, can not evaluate right every time
+    return {
+        '||': () =>
+            env.evaluate(env.node.left) ||
+            env.evaluate(env.node.right),
+        '&&': () =>
+            env.evaluate(env.node.left) &&
+            env.evaluate(env.node.right),
+    }[env.node.operator]();
 }
 
 export function MemberExpression(env: Environment<ESTree.MemberExpression>) {
