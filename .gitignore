@@ -65,3 +65,6 @@ typings/
 
 # Compiled js code
 lib/
+
+# idea
+.idea/

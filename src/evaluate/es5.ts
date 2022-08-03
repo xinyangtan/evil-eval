@@ -275,7 +275,7 @@ export function ThisExpression(env: Environment<ESTree.ThisExpression>) {
 }
 
 export function ArrayExpression(env: Environment<ESTree.ArrayExpression>) {
-    return env.node.elements.map(it => env.evaluate(it));
+    return env.node.elements.map(it => it === null ? undefined : env.evaluate(it));
 }
 
 export function ObjectExpression(env: Environment<ESTree.ObjectExpression>) {
@@ -337,7 +337,7 @@ const UnaryExpressionOperatorEvaluateMap = {
             try {
                 const value = env.scope.get(env.node.argument.name);
                 return value ? typeof value.v : 'undefined';
-            } catch (err) {
+            } catch (err: any) {
                 if (err.message === `${env.node.argument.name} is not defined`) {
                     return 'undefined';
                 } else {
@@ -384,7 +384,7 @@ export const BinaryExpressionOperatorEvaluateMap = {
     '<=': (a: any, b: any) => a <= b,
     '>': (a: any, b: any) => a > b,
     '>=': (a: any, b: any) => a >= b,
-    '<<': (a: any, b: any) => a << b,
+    '<<': (a: any, b: any) => { return a << b },
     '>>': (a: any, b: any) => a >> b,
     '>>>': (a: any, b: any) => a >>> b,
     '+': (a: any, b: any) => a + b,
@@ -463,7 +463,7 @@ export function CallExpression(env: Environment<ESTree.CallExpression>) {
 export function NewExpression(env: Environment<ESTree.NewExpression>) {
     const fn: Function = env.evaluate(env.node.callee);
     const args = env.node.arguments.map(arg => env.evaluate(arg));
-    return new (fn.bind.apply(fn, [null].concat(args)));
+    return new (fn.bind.apply(fn, [null].concat(args) as any));
 }
 
 export function SequenceExpression(env: Environment<ESTree.SequenceExpression>) {

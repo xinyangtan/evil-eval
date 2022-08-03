@@ -50,7 +50,10 @@ export function VariableDeclaration(env: Environment<ESTree.VariableDeclaration>
 export function ArrayExpression(env: Environment<ESTree.ArrayExpression>) {
     let arr: any[] = [];
     for (let element of env.node.elements) {
-        if (element.type !== 'SpreadElement') {
+        if (element === null) {
+            arr.push(undefined)
+        }
+        else if (element.type !== 'SpreadElement') {
             arr.push(env.evaluate(element));
         } else {
             arr = [...arr, ...env.evaluate(element.argument)];
