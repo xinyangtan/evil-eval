@@ -46,13 +46,20 @@ export default class Scope {
         }
     }
 
-    varDeclare(name: string, value?: any) {
+    varDeclare(name: string, value?: any, overwrite: boolean = true) {
         let scope: Scope = this;
         while (scope.outer && scope.type !== 'function') {
             scope = scope.outer;
         }
-        this.declaration[name] = createSimpleValue(value, 'var');
-        return this.declaration[name];
+        if (scope.declaration[name] === undefined) {
+            scope.declaration[name] = createSimpleValue(value, 'var');
+        }
+        else {
+            if (overwrite) {
+                scope.declaration[name] = createSimpleValue(value, 'var');
+            }
+        }
+        return scope.declaration[name];
     }
 
     letDeclare(name: string, value?: any) {

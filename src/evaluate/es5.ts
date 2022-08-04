@@ -4,6 +4,7 @@ import { Value, createMemberValue } from '../value';
 import Signal from '../signal';
 import Environment from '../environment';
 import * as Tool from '../tool';
+import { walk } from "../walker";
 
 export function Identifier(env: Environment<ESTree.Identifier>) {
     if (env.node.name === 'undefined') {
@@ -29,6 +30,7 @@ export function ExpressionStatement(env: Environment<ESTree.ExpressionStatement>
 
 export function BlockStatement(env: Environment<ESTree.BlockStatement>) {
     let scope: Scope;
+
     if (!env.scope.invasive) {
         scope = env.createBlockScope();
     } else {
@@ -36,18 +38,42 @@ export function BlockStatement(env: Environment<ESTree.BlockStatement>) {
         scope.invasive = false;
     }
 
-    for (const node of env.node.body) {
-        if (node.type === 'FunctionDeclaration') {
-            env.evaluate(node, { scope });
-        } else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
-            for (const declarator of node.declarations) {
-                scope.varDeclare((<ESTree.Identifier>declarator.id).name);
+    walk(env.node, {
+        enter(node: any, parent: any, prop: any, index: any) {
+            if (node.type === 'FunctionDeclaration') {
+                env.evaluate(node, { scope });
+            } else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
+                for (const declarator of node.declarations) {
+                    scope.varDeclare((<ESTree.Identifier>declarator.id).name, undefined, false);
+                }
             }
-        }
-    }
+        },
+        leave: null
+    })
+    // for (const node of env.node.body) {
+    //     if (node.type === 'FunctionDeclaration') {
+    //         env.evaluate(node, { scope });
+    //     } else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
+    //         for (const declarator of node.declarations) {
+    //             scope.varDeclare((<ESTree.Identifier>declarator.id).name);
+    //         }
+    //     }
+    // }
 
     for (const node of env.node.body) {
         if (node.type === 'FunctionDeclaration') {
+            continue;
+        }
+        else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
+            // variable hoisting
+            for (const declarator of node.declarations) {
+                const { name } = <ESTree.Identifier>declarator.id;
+                if (declarator.init) {
+                    // only init
+                    const value = declarator.init ? env.evaluate(declarator.init) : undefined;
+                    env.scope.varDeclare(name, value);
+                }
+            }
             continue;
         }
 
