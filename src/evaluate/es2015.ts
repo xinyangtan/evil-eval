@@ -9,37 +9,6 @@ export function ExpressionStatement(env: Environment<ESTree.ExpressionStatement>
     return env.evaluate(env.node.expression, { extra: env.extra });
 }
 
-export function BlockStatement(env: Environment<ESTree.BlockStatement>) {
-    let scope: Scope;
-    if (!env.scope.invasive) {
-        scope = env.createBlockScope();
-    } else {
-        scope = env.scope;
-        scope.invasive = false;
-    }
-
-    for (const node of env.node.body) {
-        if (node.type === 'FunctionDeclaration') {
-            env.evaluate(node, { scope });
-        } else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
-            for (const declarator of node.declarations) {
-                scope.varDeclare((<ESTree.Identifier>declarator.id).name);
-            }
-        }
-    }
-
-    for (const node of env.node.body) {
-        if (node.type === 'FunctionDeclaration') {
-            continue;
-        }
-
-        const signal: Signal = env.evaluate(node, { scope, extra: env.extra });
-        if (Signal.isSignal(signal)) {
-            return signal;
-        }
-    }
-}
-
 export function VariableDeclaration(env: Environment<ESTree.VariableDeclaration>) {
     for (const declarator of env.node.declarations) {
         const v = declarator.init ? env.evaluate(declarator.init) : undefined;
