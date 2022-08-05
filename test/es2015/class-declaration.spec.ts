@@ -76,4 +76,17 @@ describe('ClassDeclaration', () => {
         const result = runInContext(code, {}, OPTIONS);
         expect(result).toBe('ABC');
     });
+
+    test('static method', () => {
+        const code = `
+            class A {
+                static foo(bar) {
+                    return bar
+                }
+            }
+            module.exports = A;
+        `;
+        const result = runInContext(code, {}, OPTIONS);
+        expect(result.foo(1)).toBe(1);
+    });
 });

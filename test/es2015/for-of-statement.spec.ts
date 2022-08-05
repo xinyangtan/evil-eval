@@ -46,4 +46,21 @@ describe('ForOfStatement', () => {
         const result = runInContext(code, {}, OPTIONS);
         expect(result).toEqual([1, [2, 3]]);
     });
+
+
+    test('var in for-of block should cover the parent scope', () => {
+        const code = `
+var a = 1;
+
+var obj = [1, 2, 3];
+
+for (let ele of obj){
+  var a = ele;  // cover parent scope
+}
+
+module.exports = a;
+        `;
+        const result = runInContext(code, {}, OPTIONS);
+        expect(result).toEqual(3);
+    });
 });
