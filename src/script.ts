@@ -40,7 +40,7 @@ export default class Script {
         this.options.ecmaVersion = <any>ecmaVersionMap[this.options.ecmaVersion!];
 
         this.code = code;
-        this.ast = acorn.parse(this.code, <any>this.options);
+        this.ast = acorn.parse(this.code, <any>this.options) as unknown as ESTree.Program;
         this.evaluateMap = evaluate[this.options.ecmaVersion!];
     }
 

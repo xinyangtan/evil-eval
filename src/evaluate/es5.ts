@@ -4,7 +4,7 @@ import { Value, createMemberValue } from '../value';
 import Signal from '../signal';
 import Environment from '../environment';
 import * as Tool from '../tool';
-import { walk } from "../walker";
+import * as walk from 'acorn-walk';
 
 export function Identifier(env: Environment<ESTree.Identifier>) {
     if (env.node.name === 'undefined') {
@@ -38,18 +38,29 @@ export function BlockStatement(env: Environment<ESTree.BlockStatement>) {
         scope.invasive = false;
     }
 
-    walk(env.node, {
-        enter(node: any, parent: any, prop: any, index: any) {
-            if (node.type === 'FunctionDeclaration') {
-                env.evaluate(node, { scope });
-            } else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
-                for (const declarator of node.declarations) {
-                    scope.varDeclare((<ESTree.Identifier>declarator.id).name, undefined, false);
-                }
+    walk.full(env.node as any, acornNode => {
+        let node = acornNode as ESTree.Node
+        if (node.type === 'FunctionDeclaration') {
+            env.evaluate(node, { scope });
+        } else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
+            for (const declarator of node.declarations) {
+                scope.varDeclare((<ESTree.Identifier>declarator.id).name, undefined, false);
             }
-        },
-        leave: null
-    })
+        }
+    });
+
+    // walk(env.node, {
+    //     enter(node: any, parent: any, prop: any, index: any) {
+    //         if (node.type === 'FunctionDeclaration') {
+    //             env.evaluate(node, { scope });
+    //         } else if (node.type === 'VariableDeclaration' && node.kind === 'var') {
+    //             for (const declarator of node.declarations) {
+    //                 scope.varDeclare((<ESTree.Identifier>declarator.id).name, undefined, false);
+    //             }
+    //         }
+    //     },
+    //     leave: null
+    // })
     // for (const node of env.node.body) {
     //     if (node.type === 'FunctionDeclaration') {
     //         env.evaluate(node, { scope });
@@ -278,7 +289,8 @@ export function ForInStatement(env: Environment<ESTree.ForInStatement>) {
 }
 
 export function FunctionDeclaration(env: Environment<ESTree.FunctionDeclaration>) {
-    const fn = FunctionExpression(<any>env);
+    const fn = env.evaluateMap['FunctionExpression'](env)
+    // const fn = FunctionExpression(<any>env);
     env.scope.varDeclare(env.node.id.name, fn);
     return fn;
 }
